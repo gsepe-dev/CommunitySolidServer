@@ -1,0 +1,231 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "admin",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "webId",
+        "type": "string"
+      }
+    ],
+    "name": "assignWalletToWebId",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "resource",
+        "type": "string"
+      }
+    ],
+    "name": "getPermissions",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "read",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "write",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "append",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "create",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "del",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct SolidAuth.Permission",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "webId",
+        "type": "string"
+      }
+    ],
+    "name": "getWalletByWebId",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "resource",
+        "type": "string"
+      },
+      {
+        "internalType": "enum SolidAuth.AccessMode",
+        "name": "mode",
+        "type": "uint8"
+      }
+    ],
+    "name": "isAuthorized",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "resource",
+        "type": "string"
+      }
+    ],
+    "name": "removePermissions",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "webId",
+        "type": "string"
+      }
+    ],
+    "name": "removeWalletFromWebId",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "resource",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "read",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "write",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "append",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "create",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "del",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct SolidAuth.Permission",
+        "name": "permissions",
+        "type": "tuple"
+      }
+    ],
+    "name": "setPermissions",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "transferAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
