@@ -2,7 +2,10 @@
  * Credentials identifying an entity accessing or owning data.
  */
 export type Credentials = {
-  agent?: { webId: string };
+  agent?: {
+    webId: string;
+    walletAddress?: string;
+  };
   client?: { clientId: string };
   issuer?: { url: string };
   [key: string]: unknown;
