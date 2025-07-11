@@ -5,9 +5,9 @@
       "comment": "Handler to configure redirect for SmartContractAccessChecker",
       "@id": "urn:solid-src:authorization:SmartContractAccessChecker",
       "@type": "SmartContractAccessChecker",
-      "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-      "abi": "./config/ldp/authorization/abi.json",
-      "provider": "http://127.0.0.1:8545/"
+      "https://MyModule/MyComponent#contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "https://MyModule/MyComponent#abi": "./config/ldp/authorization/abi.json",
+      "https://MyModule/MyComponent#provider": "http://127.0.0.1:8545/"
     }
   ]
 }
