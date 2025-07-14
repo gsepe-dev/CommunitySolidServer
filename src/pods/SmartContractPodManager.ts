@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+import { Contract, JsonRpcProvider, Wallet } from 'ethers';
 import { getLoggerFor } from '../logging/LogUtil';
 import type { ResourceStore } from '../storage/ResourceStore';
 import { ConflictHttpError } from '../util/errors/ConflictHttpError';
@@ -12,9 +15,17 @@ export class SmartContractPodManager implements PodManager {
   private readonly store: ResourceStore;
   private readonly resourcesGenerator: ResourcesGenerator;
 
+  protected readonly contract: any;
+
   public constructor(store: ResourceStore, resourcesGenerator: ResourcesGenerator) {
     this.store = store;
     this.resourcesGenerator = resourcesGenerator;
+
+    // Caricamento ABI e creazione dell'oggetto contratto
+    const abi = JSON.parse(fs.readFileSync(path.resolve('./config/ldp/authorization/abi.json'), 'utf-8'));
+    const provider = new JsonRpcProvider('http://localhost:8545');
+    const signer = new Wallet('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', provider);
+    this.contract = new Contract('0x5FbDB2315678afecb367f032d93F642f64180aa3', abi, signer);
   }
 
   public async createPod(settings: PodSettings, overwrite: boolean): Promise<void> {
@@ -26,7 +37,7 @@ export class SmartContractPodManager implements PodManager {
 
     const count = await addGeneratedResources(settings, this.resourcesGenerator, this.store);
 
-    this.logger.info(`Added ${count} resources to ${settings.base.path}`);
+    this.logger.info('Added ${count} resources to ${settings.base.path}');
 
     // Aggiungere associazione webId a wallet Address
     this.logger.info(`Email:\t ${settings.email}`);
@@ -35,5 +46,12 @@ export class SmartContractPodManager implements PodManager {
     this.logger.info(`Template:\t ${settings.template}`);
     this.logger.info(`WebId:\t ${settings.webId}`);
     this.logger.info(`Wallet:\t ${settings.walletAddress}`);
+
+    // Transazione smart contract per assegnare il WebID al wallet
+    this.logger.info(`Registrazione on-chain: wallet ${settings.walletAddress} -> WebID ${settings.webId}`);
+    const tx = await this.contract.assignWalletToWebId(settings.walletAddress, settings.webId);
+    await tx.wait();
+    this.logger.info(`Hash transazione: ${tx.hash}`);
+    this.logger.info(`Data transazione: ${tx.data}`);
   }
 }
