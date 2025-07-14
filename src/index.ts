@@ -349,6 +349,7 @@ export * from './pods/settings/PodSettings';
 export * from './pods/ConfigPodManager';
 export * from './pods/GeneratedPodManager';
 export * from './pods/PodManager';
+export * from './pods/SmartContractPodManager';
 
 // Server
 export * from './server/AuthorizingHttpHandler';

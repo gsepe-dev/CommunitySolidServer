@@ -13,6 +13,7 @@ export const POD_STORAGE_TYPE = 'pod';
 export const POD_STORAGE_DESCRIPTION = {
   baseUrl: 'string',
   accountId: `id:${ACCOUNT_TYPE}`,
+  walletAddress: 'string',
 } as const;
 
 export const OWNER_STORAGE_TYPE = 'owner';
@@ -70,10 +71,22 @@ export class BasePodStore extends Initializer implements PodStore {
   }
 
   public async create(accountId: string, settings: PodSettings, overwrite: boolean): Promise<string> {
-    // Adding pod to storage first as we cannot undo creating the pod below.
-    // This call might also fail because there is no login method yet on the account.
-    const pod = await this.storage.create(POD_STORAGE_TYPE, { baseUrl: settings.base.path, accountId });
-    await this.storage.create(OWNER_STORAGE_TYPE, { podId: pod.id, webId: settings.webId, visible: this.visible });
+    const pod = await this.storage.create(POD_STORAGE_TYPE, {
+      baseUrl: settings.base.path,
+      accountId,
+      walletAddress: settings.walletAddress ?? '',
+    });
+
+    await this.storage.create(OWNER_STORAGE_TYPE, {
+      podId: pod.id,
+      webId: settings.webId,
+      visible: this.visible,
+    });
+
+    this.logger.info(`Creating pod for account ${accountId}`);
+    this.logger.info(`WebID: ${settings.webId}`);
+    // Log di test per verificare l'arrivo di wallet address
+    this.logger.info(`Wallet address: ${settings.walletAddress ?? '(not provided)'}`);
 
     try {
       await this.manager.createPod(settings, overwrite);
@@ -82,8 +95,8 @@ export class BasePodStore extends Initializer implements PodStore {
       await this.storage.delete(POD_STORAGE_TYPE, pod.id);
       throw new BadRequestHttpError(`Pod creation failed: ${createErrorMessage(error)}`, { cause: error });
     }
-    this.logger.debug(`Created pod ${settings.name} for account ${accountId}`);
 
+    this.logger.debug(`Created pod ${settings.name} for account ${accountId}`);
     return pod.id;
   }
 

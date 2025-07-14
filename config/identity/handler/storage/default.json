@@ -50,7 +50,7 @@
       "@id": "urn:solid-server:default:PodStore",
       "@type": "BasePodStore",
       "storage": { "@id": "urn:solid-server:default:AccountStorage" },
-      "manager": { "@id": "urn:solid-server:default:PodManager" }
+      "manager": { "@id": "urn:solid-server:default:SmartContractPodManager" }
     },
 
     {

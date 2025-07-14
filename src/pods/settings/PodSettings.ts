@@ -29,4 +29,8 @@ export interface PodSettings extends NodeJS.Dict<unknown> {
    * The OIDC issuer of the owner's WebId. Necessary if the WebID in the pod is registered with the IDP.
    */
   oidcIssuer?: string;
+  /**
+   * Wallet Address
+   */
+  walletAddress?: string;
 }
