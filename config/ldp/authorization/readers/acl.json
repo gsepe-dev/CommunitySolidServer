@@ -15,7 +15,7 @@
       "@id": "urn:solid-server:default:AuthAuxiliaryReader",
       "@type": "AuthAuxiliaryReader",
       "authStrategy": { "@id": "urn:solid-server:default:AclStrategy" },
-      "reader": { "@id": "urn:solid-server:default:WebAclReader" }
+      "reader": { "@id": "urn:solid-server:default:SmartContractPermissionReader" }
     },
 
     {

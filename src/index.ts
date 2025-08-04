@@ -39,6 +39,7 @@ export * from './authorization/PermissionReader';
 export * from './authorization/UnionPermissionReader';
 export * from './authorization/AuthAuxiliaryReader';
 export * from './authorization/WebAclReader';
+export * from './authorization/SmartContractPermissionReader';
 
 // HTTP/Auxiliary
 export * from './http/auxiliary/AuxiliaryIdentifierStrategy';

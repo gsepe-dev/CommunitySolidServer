@@ -53,5 +53,10 @@ export class SmartContractPodManager implements PodManager {
     await tx.wait();
     this.logger.info(`Hash transazione: ${tx.hash}`);
     this.logger.info(`Data transazione: ${tx.data}`);
+
+    //Verifica transazione
+    this.logger.info(`WebId: ${settings.webId}`);
+    const wa = await this.contract.getWalletByWebId(settings.webId);
+    this.logger.info(`Wallet associato al WebID: ${wa}`);
   }
 }

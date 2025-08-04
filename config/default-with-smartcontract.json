@@ -15,7 +15,6 @@
     "css:config/identity/oidc/default.json",
     "css:config/identity/ownership/token.json",
     "css:config/ldp/authentication/dpop-bearer.json",
-    "css:config/ldp/authorization/webacl.json",
     "css:config/ldp/handler/default.json",
     "css:config/ldp/metadata-parser/default.json",
     "css:config/ldp/metadata-writer/default.json",
@@ -31,7 +30,8 @@
     "css:config/util/representation-conversion/default.json",
     "css:config/util/resource-locker/memory.json",
     "css:config/util/variables/default.json",
-    "css:config/identity/pod/smartcontract.json"
+    "css:config/identity/pod/smartcontract.json",
+    "css:config/ldp/authorization/smartcontract.json"
   ],
   "@graph": [
     {
