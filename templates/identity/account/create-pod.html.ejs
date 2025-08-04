@@ -107,11 +107,11 @@
       const formData = new FormData(mainForm);
       const json = {
         name: formData.get('name'),
-        settings: {walletAddress},
+        settings: {ethAddress: walletAddress},
       };
 
       if (formData.get('internalWebId') === '') {
-        json.settings = { webId: formData.get('webId'), walletAddress };
+        json.settings = { webId: formData.get('webId'), ethAddress: walletAddress };
       }
 
       try {
