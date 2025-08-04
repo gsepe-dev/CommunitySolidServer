@@ -77,7 +77,7 @@ export class BaseLoginAccountStorage<T extends IndexTypeCollection<T>> implement
     }
 
     if (type === ACCOUNT_TYPE) {
-      value = { ...value, [LOGIN_COUNT]: 0 };
+      value = { ...value, [LOGIN_COUNT]: 0, ethAddress: value.ethAddress ?? '' };
     }
 
     const result = await this.storage.create(type, value);

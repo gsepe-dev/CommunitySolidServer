@@ -26,6 +26,7 @@ type Account = {
   email: string;
   password: string;
   verified: boolean;
+  ethAddress?: string;
 };
 
 type Settings = {
@@ -232,7 +233,7 @@ export class V6MigrationInitializer extends Initializer {
     if (settings.podBaseUrl) {
       const { id: podId } = await this.newAccountStorage.create(
         POD_STORAGE_TYPE,
-        { baseUrl: settings.podBaseUrl, accountId },
+        { baseUrl: settings.podBaseUrl, accountId, ethAddress: account.ethAddress ?? '' },
       );
       await this.newAccountStorage.create(OWNER_STORAGE_TYPE, { webId, podId, visible: false });
     }

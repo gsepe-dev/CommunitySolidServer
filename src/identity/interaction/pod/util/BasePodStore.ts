@@ -13,6 +13,7 @@ export const POD_STORAGE_TYPE = 'pod';
 export const POD_STORAGE_DESCRIPTION = {
   baseUrl: 'string',
   accountId: `id:${ACCOUNT_TYPE}`,
+  ethAddress: 'string',
 } as const;
 
 export const OWNER_STORAGE_TYPE = 'owner';
@@ -63,6 +64,7 @@ export class BasePodStore extends Initializer implements PodStore {
       await this.storage.createIndex(POD_STORAGE_TYPE, 'baseUrl');
       await this.storage.defineType(OWNER_STORAGE_TYPE, OWNER_STORAGE_DESCRIPTION, false);
       await this.storage.createIndex(OWNER_STORAGE_TYPE, 'podId');
+      await this.storage.createIndex(POD_STORAGE_TYPE, 'ethAddress');
       this.initialized = true;
     } catch (cause: unknown) {
       throw new InternalServerError(`Error defining pods in storage: ${createErrorMessage(cause)}`, { cause });
@@ -72,7 +74,7 @@ export class BasePodStore extends Initializer implements PodStore {
   public async create(accountId: string, settings: PodSettings, overwrite: boolean): Promise<string> {
     // Adding pod to storage first as we cannot undo creating the pod below.
     // This call might also fail because there is no login method yet on the account.
-    const pod = await this.storage.create(POD_STORAGE_TYPE, { baseUrl: settings.base.path, accountId });
+    const pod = await this.storage.create(POD_STORAGE_TYPE, { baseUrl: settings.base.path, accountId, ethAddress: settings.ethAddress ?? '' });
     await this.storage.create(OWNER_STORAGE_TYPE, { podId: pod.id, webId: settings.webId, visible: this.visible });
 
     try {

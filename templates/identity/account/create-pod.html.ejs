@@ -10,6 +10,11 @@
         <input id="name" type="text" name="name" autofocus>
       </li>
     </ol>
+
+    <h1>Log in with MetaMask</h1>
+    <button id="connect-button" type="button">Connect Wallet</button>
+    <p id="wallet-info" style="font-weight: bold; margin-top: 20px;"></p>
+
     <p>Choose which WebID will have initial write permissions on the pod.</p>
     <ol>
       <li class="radio">
@@ -38,6 +43,7 @@
     <li><button type="button" id="account-link">Back</button></li>
   </ul>
 </form>
+
 <div class="hidden" id="response">
   <h2>Your new Pod</h2>
   <p>
@@ -59,41 +65,78 @@
   <p class="actions"><button type="button" id="response-account-link">Back</button></p>
 </div>
 
-
 <script>
   const { mainForm } = getElements('mainForm');
+  const connectButton = document.getElementById('connect-button');
+  const walletInfo = document.getElementById('wallet-info');
+  const createButton = document.querySelector('button[name="submit"]');
 
-  (async() => {
+  (async () => {
     let res = await fetch('<%= idpIndex %>', { headers: { accept: 'application/json' } });
-
     const { controls } = await res.json();
+
     setRedirectClick('account-link', controls.html.account.account);
     setRedirectClick('response-account-link', controls.html.account.account);
 
-    addPostListener(async() => {
+    let walletAddress = null;
+
+    connectButton.addEventListener('click', async () => {
+      if (!window.ethereum) {
+        walletInfo.textContent = 'ERROR: MetaMask is not installed.';
+        return;
+      }
+
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+
+        walletInfo.textContent = `Wallet connected: ${address}`;
+        connectButton.style.display = 'none';
+
+        walletAddress = address;
+
+        createButton.disabled = false;
+      } catch (err) {
+        walletInfo.textContent = `Connection failed: ${err.message}`;
+      }
+    });
+
+    mainForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
       const formData = new FormData(mainForm);
       const json = {
         name: formData.get('name'),
-      }
+        settings: {walletAddress},
+      };
+
       if (formData.get('internalWebId') === '') {
-        json.settings = { webId: formData.get('webId') };
+        json.settings = { webId: formData.get('webId'), walletAddress };
       }
 
-      const res = await postJson(controls.account.pod, json);
-      if (res.status >= 400) {
-        throw new Error((await res.json()).message);
+      try {
+
+        console.log('Payload inviato:', JSON.stringify(json, null, 2));
+
+
+        const res = await postJson(controls.account.pod, json);
+        if (res.status >= 400) {
+          throw new Error((await res.json()).message);
+        }
+
+        const { pod, webId, webIdResource } = await res.json();
+
+        updateElement('response-podBaseUrl', pod, { innerText: true, href: true });
+        if (webIdResource) {
+          updateElement('response-webId', webId, { innerText: true, href: true });
+        }
+
+        setVisibility('response', true);
+        setVisibility('response-linkWebId', Boolean(webIdResource));
+        setVisibility('mainForm', false);
+      } catch (err) {
+        updateElement('error', `Errore nella creazione del pod: ${err.message}`, { innerText: true });
       }
-
-      const { pod, webId, webIdResource } = await res.json();
-
-      updateElement('response-podBaseUrl', pod, { innerText: true, href: true });
-      if (webIdResource) {
-        updateElement('response-webId', webId, { innerText: true, href: true });
-      }
-
-      setVisibility('response', true);
-      setVisibility('response-linkWebId', Boolean(webIdResource));
-      setVisibility('mainForm', false);
     });
   })();
 </script>
