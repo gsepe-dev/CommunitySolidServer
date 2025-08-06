@@ -1,32 +1,173 @@
-<h1>An application is requesting access</h1>
+<h1>Consenso al trattamento dei dati personali e sensibili (D. Lgs 196/2003 - Art. 23)</h1>
+
 <p class="error" id="error"></p>
-<p>
-  Do you trust this application
-  to read and write data on your behalf?
-</p>
-<dl id="client"></dl>
-<form method="post" id="mainForm">
-  <fieldset>
-    <legend>Choose your WebID to authorize</legend>
-    <ol id="webIdList">
-    </ol>
-  </fieldset>
 
-  <fieldset>
-    <ol>
-      <li class="checkbox">
-        <label><input type="checkbox" name="remember" value="true" checked>Remember this client</label>
+<section id="consenso">
+  <hr/>
+
+  <h3>DATI ANAGRAFICI</h3>
+
+  <form method="post" id="mainForm">
+    <label for="nome">Il/la sottoscritta:</label>
+    <input type="text" id="nome" name="nome" required />
+
+    <label for="nascita">nato/a a:</label>
+    <input type="text" id="nascita" name="nascita" required />
+
+    <label for="data">il:</label>
+    <input type="date" id="data" name="data" required />
+
+    <label for="residenza">residente in:</label>
+    <input type="text" id="residenza" name="residenza" required />
+
+    <label for="via">alla via:</label>
+    <input type="text" id="via" name="via" required />
+
+    <label for="cf">codice fiscale:</label>
+    <input type="text" id="cf" name="cf" required />
+    
+    <br/>
+
+    <p>
+      Dichiara di aver letto e compreso le informazioni fornite a norma
+      dell'art.13 del D.lgs. 196/2003 e consapevole, in particolare, che
+      il trattamento riguarderà i dati “sensibili” di cui all'art 4, comma 1 lett. d)
+      del citato decreto, vale a dire
+      <em>
+        “i dati personali idonei a rivelare l'origine razziale ed etnica, le convinzioni religiose, filosofiche o di altro genere, 
+        le opinioni politiche, l'adesione a partiti, sindacati, associazioni od organizzazioni a carattere religioso, filosofico,
+        politico o sindacale, nonché i dati idonei a rivelare lo stato di salute e la vita sessuale”
+      </em>,
+    </p>
+
+    <br/>
+
+    <p style="text-align: center;"><strong>PRESTA</strong></p>
+
+    <br/>
+
+    <p>
+      libero, consapevole, informato e specifico consenso al trattamento, anche con strumenti informatici e/o telematici,
+      dei dati personali e sensibili per fini diagnostico-terapeutici limitatamente ai servizi sanitari richiesti e necessari alla tutela della propria salute,
+      alla Piattaforma informatica <strong>"<span class="client-name"></span>"</strong>, cui possono accedere medici prescrittori e centri erogatori (farmacie pubbliche e private)
+      al fine di garantire continuità dei trattamenti sanitari attinenti alla propria specifica patologia,
+      per i dovuti adempimenti amministrativi e per tutte le altre attività connesse, compresa la comunicazione dei dati nelle forme e nei modi indicati nell'informativa.
+    </p>
+
+    <hr/>
+
+    <h3>INFORMATIVA PRIVACY</h3>
+
+    <p>
+      Ai sensi dell'art. 13 del Decreto Legislativo 30 giugno 2003, n. 196 - recante disposizione in materia di protezione dei dati personali, si rendono le seguenti informazioni:
+    </p>
+
+    <ul>
+      <li>
+        I dati personali sono richiesti, raccolti e trattati per lo svolgimento delle specifiche funzioni istituzionali e nei limiti previsti dalla relativa normativa;
       </li>
-    </ol>
-  </fieldset>
+      <li>
+        L'accesso ai dati è consentito esclusivamente ai medici prescrittori e centri erogatori tramite un doppio sistema di filtro costituito sia dalle credenziali
+        richieste per l'accesso al sistema <strong>"<span class="client-name"></span>"</strong> sia dalla specifica autenticazione tramite i codici riportati sulla propria tessera sanitaria;
+      </li>
+      <li>
+        La comunicazione o la diffusione dei dati personali a soggetti pubblici o privati sarà effettuata solo se prevista da norme di legge o di regolamento
+        o se risulta necessaria per  fini diagnostico - terapeutici;
+      </li>
+      <li>
+        L'interessato potrà in ogni momento esercitare i diritti di cui all'art. 7 del D.Lgs. 30 giugno 2003 n. 196.
+      </li>
+    </ul>
+    <p>
+      Il titolare dei dati trattati è la piattaforma <strong>"<span class="client-name"></span>"</strong>.  
+    </p>
 
-  <p class="actions">
-    <button id="authorize" type="submit" disabled autofocus>Authorize</button>
-    <button id="cancel" type="button">Cancel</button>
-    <button id="edit-account" type="button" class="alternate">Edit account</button>
-    <button id="switch-account" type="button" class="alternate">Use a different account</button>
-  </p>
-</form>
+    <label for="firma-data">Data:</label>
+    <input type="date" id="firma-data" name="firma-data" required />
+
+    <label for="firma">Firma:</label>
+    <input type="text" id="firma" name="firma" required />
+
+    <hr/>
+
+    <h3>SELEZIONE WEBID</h3>
+
+    <fieldset>
+      <ol id="webIdList">
+      </ol>
+    </fieldset>
+
+    <fieldset>
+      <ol>
+        <li class="checkbox">
+          <label><input type="checkbox" name="remember" value="true" checked>Remember this client</label>
+        </li>
+      </ol>
+    </fieldset>
+
+    <hr/>
+
+    <p class="actions">
+      <button id="authorize" type="submit" disabled autofocus>Autorizza</button>
+      <button id="cancel" type="button">Cancella</button>
+      <button id="edit-account" type="button" class="alternate">Modifica account</button>
+      <button id="switch-account" type="button" class="alternate">Usa un account diverso</button>
+    </p>
+  </form>
+</section>
+
+<style>
+  body {
+    max-width: 800px;
+    padding: 2em;
+    margin: auto;
+  }
+
+  form label {
+    display: block;
+    font-weight: bold;
+    margin-top: 1em;
+  }
+
+  form input {
+    display: block;
+    width: 100%;
+    padding: 0.5em;
+    margin-top: 0.2em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  p {
+    margin: 1em 0;
+    text-align: justify;
+    line-height: 1.6em;
+  }
+
+  #webIdList .radio label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  #webIdList input[type="radio"] {
+    position: relative;
+    top: 0;
+  }
+
+  .checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .checkbox input[type="checkbox"] {
+    position: relative;
+    top: 0;
+    accent-color: var(--solid-purple); /* colore coerente con il tema */
+    cursor: pointer;
+  }
+</style>
 
 <script>
   // Wire up elements
@@ -56,8 +197,12 @@
     }
 
     const { client } = await fetchJson(controls.oidc.consent);
-    showClientInfo('Name', client.client_name);
-    showClientInfo('ID', client.client_id);
+
+    const client_name = client?.client_name || 'Nome non disponibile';
+    const client_id = client?.client_id || 'ID non disponibile';
+
+    document.querySelectorAll('.client-name').forEach(el => {el.textContent = client_name});
+    document.querySelectorAll('.client-id').forEach(el => {el.textContent = client_id});
 
     addPostListener(() => consent(controls));
   })();
@@ -72,13 +217,6 @@
       await fetch(controls.account.logout, { method: 'POST' });
       location.href = controls.html.main.login;
     });
-  }
-
-  // Adds client info to the UI
-  function showClientInfo(label, value) {
-    if (value) {
-      elements.client.insertAdjacentHTML('beforeend', `<dt>${label}</dt><dd>${value}</dd>`);
-    }
   }
 
   async function consent(controls) {
