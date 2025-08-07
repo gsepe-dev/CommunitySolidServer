@@ -116,7 +116,7 @@
 
       try {
 
-        console.log('Payload inviato:', JSON.stringify(json, null, 2));
+        console.log('Sent payload:', JSON.stringify(json, null, 2));
 
 
         const res = await postJson(controls.account.pod, json);
@@ -135,7 +135,7 @@
         setVisibility('response-linkWebId', Boolean(webIdResource));
         setVisibility('mainForm', false);
       } catch (err) {
-        updateElement('error', `Errore nella creazione del pod: ${err.message}`, { innerText: true });
+        updateElement('error', `Error creating pod: ${err.message}`, { innerText: true });
       }
     });
   })();
