@@ -2,26 +2,26 @@
 
 <p class="error" id="error"></p>
 
-<section id="consenso">
+<section id="consent">
   <hr/>
 
   <h3>DATI ANAGRAFICI</h3>
 
   <form method="post" id="mainForm">
-    <label for="nome">Il/la sottoscritta:</label>
-    <input type="text" id="nome" name="nome" required />
+    <label for="name">Il/la sottoscritta:</label>
+    <input type="text" id="name" name="name" required />
 
-    <label for="nascita">nato/a a:</label>
-    <input type="text" id="nascita" name="nascita" required />
+    <label for="birthPlace">nato/a a:</label>
+    <input type="text" id="birthPlace" name="birthPlace" required />
 
-    <label for="data">il:</label>
-    <input type="date" id="data" name="data" required />
+    <label for="birthDate">il:</label>
+    <input type="date" id="birthDate" name="birthDate" required />
 
-    <label for="residenza">residente in:</label>
-    <input type="text" id="residenza" name="residenza" required />
+    <label for="residence">residente in:</label>
+    <input type="text" id="residence" name="residence" required />
 
-    <label for="via">alla via:</label>
-    <input type="text" id="via" name="via" required />
+    <label for="street">alla via:</label>
+    <input type="text" id="street" name="street" required />
 
     <label for="cf">codice fiscale:</label>
     <input type="text" id="cf" name="cf" required />
@@ -82,12 +82,6 @@
       Il titolare dei dati trattati è la piattaforma <strong>"<span class="client-name"></span>"</strong>.  
     </p>
 
-    <label for="firma-data">Data:</label>
-    <input type="date" id="firma-data" name="firma-data" required />
-
-    <label for="firma">Firma:</label>
-    <input type="text" id="firma" name="firma" required />
-
     <hr/>
 
     <h3>SELEZIONE WEBID</h3>
@@ -104,6 +98,13 @@
         </li>
       </ol>
     </fieldset>
+
+    <hr/>
+
+    <label for="signature-date">Data e ora: <span id="signature-date"></span></label>
+
+    <label for="signature">Firma:</label>
+    <input type="text" id="signature" name="signature" required />
 
     <hr/>
 
@@ -169,7 +170,13 @@
   }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/js-sha512@0.9.0/src/sha512.min.js"></script>
+
 <script>
+
+  // Global variable to save the selected Ethereum address
+  let selectedEthAddress = null;
+
   // Wire up elements
   const elements = getElements();
 
@@ -198,13 +205,24 @@
 
     const { client } = await fetchJson(controls.oidc.consent);
 
-    const client_name = client?.client_name || 'Nome non disponibile';
-    const client_id = client?.client_id || 'ID non disponibile';
+    const client_name = client?.client_name || 'Client name not available';
+    const client_id = client?.client_id || 'Client id not available';
 
     document.querySelectorAll('.client-name').forEach(el => {el.textContent = client_name});
     document.querySelectorAll('.client-id').forEach(el => {el.textContent = client_id});
 
     addPostListener(() => consent(controls));
+
+    // Add listeners to all WebID radio buttons
+    document.querySelectorAll('input[name="webId"]').forEach(input => {
+      input.addEventListener('change', async (event) => {
+        const selectedWebId = event.target.value;
+        selectedEthAddress = await getEthAddressFromWebId(selectedWebId);
+        console.log(`WebId: ${selectedWebId} - Ethereum address: ${selectedEthAddress}`);
+      });
+    });
+
+    displayFormattedDateTime('signature-date');
   })();
 
   function wireButtons(controls) {
@@ -245,5 +263,117 @@
       return;
     }
     location.href = json.location;
+  }
+
+  function displayFormattedDateTime(elementId) {
+    const element = document.getElementById(elementId);
+    const now = new Date();
+
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    const formatted = `${day}/${month}/${year} - ${hours}:${minutes}`;
+    element.textContent = formatted;
+  }
+
+  // Function to retrieve the Ethereum address
+  async function getEthAddressFromWebId(webIdUrl) {
+    try {
+      const response = await fetch(webIdUrl, {
+        headers: { 'Accept': 'text/turtle' }
+      });
+
+      if (!response.ok) {
+        console.error(`HTTP error ${response.status} retrieving WebID`);
+        return null;
+      }
+
+      const ttlText = await response.text();
+      const ethMatch = ttlText.match(/eth:ethAddress\s+"([^"]+)"/);
+
+      return ethMatch ? ethMatch[1] : null;
+    } catch (error) {
+      console.error(`Error retrieving WebID ${webIdUrl}:`, error);
+      return null;
+    }
+  }
+
+  function generateConsentText() {
+    // Recovery of values from the DOM
+    const name = document.querySelector('#name')?.value || '';
+    const birthPlace = document.querySelector('#birthPlace')?.value || '';
+    const birthDate = document.querySelector('#birthDate')?.value || '';
+    const residence = document.querySelector('#residence')?.value || '';
+    const street = document.querySelector('#street')?.value || '';
+    const cf = document.querySelector('#cf')?.value || '';
+    const clientName = document.querySelector('.client-name')?.textContent.trim() || '';
+    const selectedWebId = document.querySelector('#webIdList input[type="radio"]:checked')?.value || '';
+    const rememberClient = document.querySelector('input[name="remember"]')?.checked ? 'Sì' : 'No';
+    const signatureDate = new Date().toLocaleString('it-IT');
+    const signature = document.querySelector('#signature')?.value || '';
+
+    // Static template with placeholder
+    const template = `
+    Consenso al trattamento dei dati personali e sensibili (D. Lgs 196/2003 - Art. 23)
+
+    DATI ANAGRAFICI
+    Il/la sottoscritta: {{name}}
+    nato/a a: {{birthPlace}}
+    il: {{birthDate}}
+    residente in: {{residence}}
+    alla via: {{street}}
+    codice fiscale: {{cf}}
+
+    Dichiara di aver letto e compreso le informazioni fornite a norma dell'art.13 del D.lgs. 196/2003 e consapevole, in particolare, che il trattamento riguarderà i dati “sensibili” di cui all'art 4, comma 1 lett. d) del citato decreto, vale a dire “i dati personali idonei a rivelare l'origine razziale ed etnica, le convinzioni religiose, filosofiche o di altro genere, le opinioni politiche, l'adesione a partiti, sindacati, associazioni od organizzazioni a carattere religioso, filosofico, politico o sindacale, nonché i dati idonei a rivelare lo stato di salute e la vita sessuale” , 
+
+    PRESTA
+
+    libero, consapevole, informato e specifico consenso al trattamento, anche con strumenti informatici e/o telematici, dei dati personali e sensibili per fini diagnostico-terapeutici limitatamente ai servizi sanitari richiesti e necessari alla tutela della propria salute, alla Piattaforma informatica "{{clientName}}", cui possono accedere medici prescrittori e centri erogatori (farmacie pubbliche e private) al fine di garantire continuità dei trattamenti sanitari attinenti alla propria specifica patologia, per i dovuti adempimenti amministrativi e per tutte le altre attività connesse, compresa la comunicazione dei dati nelle forme e nei modi indicati nell'informativa. 
+
+    INFORMATIVA PRIVACY
+    Ai sensi dell'art. 13 del Decreto Legislativo 30 giugno 2003, n. 196 - recante disposizione in materia di protezione dei dati personali, si rendono le seguenti informazioni:
+
+    - I dati personali sono richiesti, raccolti e trattati per lo svolgimento delle specifiche funzioni istituzionali e nei limiti previsti dalla relativa normativa;
+    - L'accesso ai dati è consentito esclusivamente ai medici prescrittori e centri erogatori tramite un doppio sistema di filtro costituito sia dalle credenziali richieste per l'accesso al sistema "Media Kraken" sia dalla specifica autenticazione tramite i codici riportati sulla propria tessera sanitaria;
+    - La comunicazione o la diffusione dei dati personali a soggetti pubblici o privati sarà effettuata solo se prevista da norme di legge o di regolamento o se risulta necessaria per fini diagnostico - terapeutici;
+    - L'interessato potrà in ogni momento esercitare i diritti di cui all'art. 7 del D.Lgs. 30 giugno 2003 n. 196.
+
+    Il titolare dei dati trattati è la piattaforma "{{clientName}}".
+
+    SELEZIONE WEBID
+    {{selectedWebId}}
+
+    Remember this client: {{rememberClient}}
+
+    Data e ora: {{signatureDate}}
+    Firma: {{signature}}
+    `;
+
+    // Replacing placeholders
+    const data = {
+      name,
+      birthPlace,
+      birthDate,
+      residence,
+      street,
+      cf,
+      clientName,
+      selectedWebId,
+      rememberClient,
+      signatureDate,
+      signature
+    };
+
+    let finalText = template;
+    for (const key in data) {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      finalText = finalText.replace(regex, data[key]);
+    }
+
+    return finalText;
   }
 </script>
