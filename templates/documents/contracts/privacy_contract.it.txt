@@ -1,0 +1,33 @@
+Consenso al trattamento dei dati personali e sensibili (D. Lgs 196/2003 - Art. 23)
+
+DATI ANAGRAFICI
+Il/la sottoscritta: {{name}}
+nato/a a: {{birthPlace}}
+il: {{birthDate}}
+residente in: {{residence}}
+alla via: {{street}}
+codice fiscale: {{cf}}
+
+Dichiara di aver letto e compreso le informazioni fornite a norma dell'art.13 del D.lgs. 196/2003 e consapevole, in particolare, che il trattamento riguarderà i dati “sensibili” di cui all'art 4, comma 1 lett. d) del citato decreto, vale a dire “i dati personali idonei a rivelare l'origine razziale ed etnica, le convinzioni religiose, filosofiche o di altro genere, le opinioni politiche, l'adesione a partiti, sindacati, associazioni od organizzazioni a carattere religioso, filosofico, politico o sindacale, nonché i dati idonei a rivelare lo stato di salute e la vita sessuale” , 
+
+PRESTA
+
+libero, consapevole, informato e specifico consenso al trattamento, anche con strumenti informatici e/o telematici, dei dati personali e sensibili per fini diagnostico-terapeutici limitatamente ai servizi sanitari richiesti e necessari alla tutela della propria salute, alla Piattaforma informatica "{{clientName}}", cui possono accedere medici prescrittori e centri erogatori (farmacie pubbliche e private) al fine di garantire continuità dei trattamenti sanitari attinenti alla propria specifica patologia, per i dovuti adempimenti amministrativi e per tutte le altre attività connesse, compresa la comunicazione dei dati nelle forme e nei modi indicati nell'informativa. 
+
+INFORMATIVA PRIVACY
+Ai sensi dell'art. 13 del Decreto Legislativo 30 giugno 2003, n. 196 - recante disposizione in materia di protezione dei dati personali, si rendono le seguenti informazioni:
+
+- I dati personali sono richiesti, raccolti e trattati per lo svolgimento delle specifiche funzioni istituzionali e nei limiti previsti dalla relativa normativa;
+- L'accesso ai dati è consentito esclusivamente ai medici prescrittori e centri erogatori tramite un doppio sistema di filtro costituito sia dalle credenziali richieste per l'accesso al sistema "Media Kraken" sia dalla specifica autenticazione tramite i codici riportati sulla propria tessera sanitaria;
+- La comunicazione o la diffusione dei dati personali a soggetti pubblici o privati sarà effettuata solo se prevista da norme di legge o di regolamento o se risulta necessaria per fini diagnostico - terapeutici;
+- L'interessato potrà in ogni momento esercitare i diritti di cui all'art. 7 del D.Lgs. 30 giugno 2003 n. 196.
+
+Il titolare dei dati trattati è la piattaforma "{{clientName}}".
+
+SELEZIONE WEBID
+{{selectedWebId}}
+
+Remember this client: {{rememberClient}}
+
+Data e ora: {{signatureDate}}
+Firma: {{signature}}

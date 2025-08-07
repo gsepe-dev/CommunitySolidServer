@@ -37,6 +37,12 @@
           "@type": "StaticAssetEntry",
           "relativeUrl": "/.well-known/css/scripts/",
           "filePath": "@css:templates/scripts/"
+        },
+        {
+          "@id": "urn:solid-server:default:DocumentsStaticAsset",
+          "@type": "StaticAssetEntry",
+          "relativeUrl": "/.well-known/documents/",
+          "filePath": "@css:templates/documents/"
         }
       ]
     }
