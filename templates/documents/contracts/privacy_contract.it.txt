@@ -30,4 +30,3 @@ SELEZIONE WEBID
 Remember this client: {{rememberClient}}
 
 Data e ora: {{signatureDate}}
-Firma: {{signature}}
