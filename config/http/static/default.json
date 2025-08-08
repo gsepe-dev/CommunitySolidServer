@@ -43,6 +43,12 @@
           "@type": "StaticAssetEntry",
           "relativeUrl": "/.well-known/documents/",
           "filePath": "@css:templates/documents/"
+        },
+        {
+          "@id": "urn:solid-server:default:AbisStaticAsset",
+          "@type": "StaticAssetEntry",
+          "relativeUrl": "/.well-known/abi/",
+          "filePath": "@css:templates/abi/"
         }
       ]
     }
