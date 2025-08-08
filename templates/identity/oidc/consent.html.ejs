@@ -109,10 +109,13 @@
 
     <label for="signature-date">Data e ora: <span id="signature-date"></span></label>
 
-    <label for="signature">Firma:</label>
-    <input type="text" id="signature" name="signature" required />
+    <button type="button" id="signatureButton">Firma con MetaMask</button>
+    <input type="hidden" id="signature" name="signature" required />
 
     <hr/>
+
+    <input type="hidden" id="contractHash" name="contractHash" />
+    <input type="hidden" id="sha512Audit" name="sha512Audit" />
 
     <p class="actions">
       <button id="authorize" type="submit" disabled autofocus>Autorizza</button>
@@ -123,15 +126,7 @@
   </form>
 </section>
 
-
 <script>
-
-  // Global variable to save the selected Ethereum address
-  let selectedEthAddress = null;
-
-  // Wire up elements
-  const elements = getElements();
-
   // Retrieve and display client information
   (async() => {
     const controls = await fetchControls('<%= idpIndex %>');
@@ -158,7 +153,7 @@
     const { client } = await fetchJson(controls.oidc.consent);
 
     const client_name = client?.client_name || 'Client name not available';
-    const client_id = client?.client_id || 'Client id not available';
+    window.client_id = client?.client_id || 'Client id not available';
 
     document.querySelectorAll('.client-name').forEach(el => {el.textContent = client_name});
     document.querySelectorAll('.client-id').forEach(el => {el.textContent = client_id});
@@ -176,6 +171,11 @@
 
     displayFormattedDateTime('signature-date');
   })();
+</script>
+
+<script>
+  // Wire up elements
+  const elements = getElements();
 
   function wireButtons(controls) {
     elements.cancel.addEventListener('click', async() => {
@@ -216,7 +216,9 @@
     }
     location.href = json.location;
   }
+</script>
 
+<script>
   function displayFormattedDateTime(elementId) {
     const element = document.getElementById(elementId);
     const now = new Date();
@@ -231,6 +233,11 @@
     const formatted = `${day}/${month}/${year} - ${hours}:${minutes}`;
     element.textContent = formatted;
   }
+</script>
+
+<script>
+  // Global variable to save the selected Ethereum address
+  let selectedEthAddress = null;
 
   // Function to retrieve the Ethereum address
   async function getEthAddressFromWebId(webIdUrl) {
@@ -253,7 +260,9 @@
       return null;
     }
   }
+</script>
 
+<script>
   async function generateConsentText(lang = 'it') {
     // Recovery of values from the DOM
     const name = document.querySelector('#name')?.value || '';
@@ -301,47 +310,129 @@
 
     return finalText;
   }
+</script>
+
+<script>
+  function isSignatureReady() {
+    const form = document.getElementById('mainForm');
+    const requiredFields = Array.from(form.querySelectorAll('input[required]')).filter(el => el.offsetParent !== null);
+    for (let field of requiredFields) {
+      if (!field.value.trim()) return false;
+    }
+
+    const webIdSelected = form.querySelector('input[name="webId"]:checked');
+    return !!webIdSelected;
+  }
+
+  function updateSignatureButtonState() {
+    const btn = document.getElementById('signatureButton');
+    if (btn) btn.disabled = !isSignatureReady();
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('mainForm');
-    const authorizeBtn = document.getElementById('authorize');
+    const signatureBtn = document.getElementById('signatureButton');
 
-    function isFormValid() {
-      // Verifica tutti gli input richiesti
-      const requiredFields = form.querySelectorAll('input[required]');
-      for (let field of requiredFields) {
-        if (!field.value.trim()) return false;
+    if (signatureBtn) {
+      updateSignatureButtonState(); // stato iniziale
+
+      form.addEventListener('input', updateSignatureButtonState);
+      const webIdList = document.getElementById('webIdList');
+      if (webIdList) {
+        webIdList.addEventListener('change', updateSignatureButtonState);
+      }
+    }
+  });
+</script>
+
+<script type="module">
+
+  import { ethers,JsonRpcProvider } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.js";
+
+  // Util: UTF-8 -> hex (per personal_sign)
+  function utf8ToHex(str) {
+    const bytes = new TextEncoder().encode(str);
+    return '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function connectWalletIfNeeded() {
+    if (!window.ethereum) {
+      throw new Error('MetaMask non rilevata. Installa/abilita l’estensione.');
+    }
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (!accounts || accounts.length === 0) {
+      throw new Error('Nessun account disponibile in MetaMask.');
+    }
+    return accounts[0];
+  }
+
+  async function signConsentWithMetaMask() {
+    const statusEl = document.getElementById('walletStatus');
+
+    try {
+      // 1) Connessione wallet
+      const signerAddress = await connectWalletIfNeeded();
+      if (statusEl) statusEl.textContent = `Wallet connesso: ${signerAddress}`;
+
+      console.log(`Wallet connesso: ${signerAddress}`);
+
+      // 2) Recupero WebID e relativo Ethereum address
+      const selectedWebId = document.querySelector('input[name="webId"]:checked')?.value;
+      const expectedAddress = await getEthAddressFromWebId(selectedWebId);
+      if (!expectedAddress) throw new Error('Indirizzo Ethereum non trovato per il WebID selezionato.');
+      if (signerAddress.toLowerCase() !== expectedAddress.toLowerCase()) {
+        throw new Error(`Mismatch tra wallet MetaMask (${signerAddress}) e WebID (${expectedAddress}).`);
       }
 
-      // Verifica che sia selezionato un WebID
-      const webIdSelected = form.querySelector('input[name="webId"]:checked');
-      if (!webIdSelected) return false;
-
-      return true;
-    }
-
-    function updateAuthorizeState() {
-      authorizeBtn.disabled = !isFormValid();
-    }
-
-    // Aggiungi listener a tutti i campi richiesti
-    const requiredFields = form.querySelectorAll('input[required]');
-    requiredFields.forEach(field => {
-      field.addEventListener('input', updateAuthorizeState);
-    });
-
-    // Aggiungi listener ai radio WebID (anche se vengono aggiunti dinamicamente)
-    const observer = new MutationObserver(() => {
-      const webIdRadios = form.querySelectorAll('input[name="webId"]');
-      webIdRadios.forEach(radio => {
-        radio.addEventListener('change', updateAuthorizeState);
+      // 3) Firma ricardiana
+      const finalText = await generateConsentText('it');
+      const hexMessage = utf8ToHex(finalText);
+      const signature = await window.ethereum.request({
+        method: 'personal_sign',
+        params: [hexMessage, signerAddress]
       });
-      updateAuthorizeState(); // Aggiorna stato iniziale
-    });
+      document.getElementById('signature').value = signature;
+      document.getElementById('signatureButton').textContent = 'Firmato ✅';
+      document.getElementById('signatureButton').disabled = true;
 
-    observer.observe(document.getElementById('webIdList'), { childList: true });
+      // 4) Invocazione contratto Ethereum
+      const abi = await loadAbi('<%= baseUrl %>.well-known/abi/PodAuthorization.json');
+      const CONTRACT_ADDRESS = '0x5fbdb2315678afecb367f032d93f642f64180aa3';
+      const provider = new JsonRpcProvider('http://localhost:8545');
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
 
-    // Esegui una prima validazione
-    updateAuthorizeState();
-});
+      console.log('ABI:', abi);
+      console.log('Contract address:', CONTRACT_ADDRESS);
+      console.log('Signer:', signer);
+      console.log('Client id:', window.client_id);
+
+      const contractHash = await sha512(finalText);
+      const validUntil = Math.floor(Date.now() / 1000) + (365 * 24 * 60 * 60); // valido 1 anno
+
+      await contract.grantAuthorization(contractHash, window.client_id, validUntil);
+
+      if (statusEl) statusEl.textContent = `Firma e invocazione completate per ${signerAddress}`;
+
+    } catch (err) {
+      console.error('Errore:', err);
+      if (statusEl) statusEl.textContent = `Errore: ${err.message}`;
+      alert(`Errore: ${err.message}`);
+    }
+  }
+
+  async function loadAbi(url) {
+    const res = await fetch(url, { cache: 'no-store' }); // evita cache del browser
+    if (!res.ok) {
+      throw new Error(`Impossibile caricare l'ABI da ${url}`);
+    }
+    return await res.json();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('signatureButton');
+    if (btn) {
+      btn.addEventListener('click', signConsentWithMetaMask);
+    }
+  });
 </script>
