@@ -277,7 +277,7 @@
     const signatureDate = new Date().toLocaleString('it-IT');
     const signature = document.querySelector('#signature')?.value || '';
 
-    // Caricamento template dal server
+    // Loading template from server
     const response = await fetch(`<%= baseUrl %>.well-known/documents/contracts/privacy_contract.${lang}.txt`);
     
     if (!response.ok) {
@@ -316,16 +316,19 @@
   function isSignatureReady() {
     const form = document.getElementById('mainForm');
     const requiredFields = Array.from(form.querySelectorAll('input[required]')).filter(el => el.offsetParent !== null);
+
     for (let field of requiredFields) {
       if (!field.value.trim()) return false;
     }
 
     const webIdSelected = form.querySelector('input[name="webId"]:checked');
-    return !!webIdSelected;
+
+    return webIdSelected !== null;
   }
 
   function updateSignatureButtonState() {
     const btn = document.getElementById('signatureButton');
+    
     if (btn) btn.disabled = !isSignatureReady();
   }
 
@@ -337,7 +340,9 @@
       updateSignatureButtonState(); // stato iniziale
 
       form.addEventListener('input', updateSignatureButtonState);
+
       const webIdList = document.getElementById('webIdList');
+
       if (webIdList) {
         webIdList.addEventListener('change', updateSignatureButtonState);
       }
@@ -347,84 +352,94 @@
 
 <script type="module">
 
-  import { ethers,JsonRpcProvider } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.js";
-
-  // Util: UTF-8 -> hex (per personal_sign)
-  function utf8ToHex(str) {
-    const bytes = new TextEncoder().encode(str);
-    return '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  async function connectWalletIfNeeded() {
-    if (!window.ethereum) {
-      throw new Error('MetaMask non rilevata. Installa/abilita l’estensione.');
-    }
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    if (!accounts || accounts.length === 0) {
-      throw new Error('Nessun account disponibile in MetaMask.');
-    }
-    return accounts[0];
-  }
+  import { ethers, JsonRpcProvider } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.js";
 
   async function signConsentWithMetaMask() {
     const statusEl = document.getElementById('walletStatus');
 
     try {
-      // 1) Connessione wallet
-      const signerAddress = await connectWalletIfNeeded();
-      if (statusEl) statusEl.textContent = `Wallet connesso: ${signerAddress}`;
-
-      console.log(`Wallet connesso: ${signerAddress}`);
-
-      // 2) Recupero WebID e relativo Ethereum address
-      const selectedWebId = document.querySelector('input[name="webId"]:checked')?.value;
-      const expectedAddress = await getEthAddressFromWebId(selectedWebId);
-      if (!expectedAddress) throw new Error('Indirizzo Ethereum non trovato per il WebID selezionato.');
-      if (signerAddress.toLowerCase() !== expectedAddress.toLowerCase()) {
-        throw new Error(`Mismatch tra wallet MetaMask (${signerAddress}) e WebID (${expectedAddress}).`);
+      if (!window.ethereum) {
+        throw new Error("ERROR: MetaMask is not installed.");
       }
 
-      // 3) Firma ricardiana
-      const finalText = await generateConsentText('it');
-      const hexMessage = utf8ToHex(finalText);
-      const signature = await window.ethereum.request({
-        method: 'personal_sign',
-        params: [hexMessage, signerAddress]
-      });
-      document.getElementById('signature').value = signature;
-      document.getElementById('signatureButton').textContent = 'Firmato ✅';
-      document.getElementById('signatureButton').disabled = true;
+      // Retrieve Ethereum address from selected webID
+      const selectedWebId = document.querySelector('input[name="webId"]:checked')?.value;
 
-      // 4) Invocazione contratto Ethereum
-      const abi = await loadAbi('<%= baseUrl %>.well-known/abi/PodAuthorization.json');
-      const CONTRACT_ADDRESS = '0x5fbdb2315678afecb367f032d93f642f64180aa3';
+      if (!selectedWebId) throw new Error("ERROR: Select a WebID.");
+
+      const expectedAddress = await getEthAddressFromWebId(selectedWebId);
+
+      if (!expectedAddress) throw new Error("ERROR: Ethereum address not found for the selected WebID.");
+
+      // Request accounts from MetaMask
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }).catch( err => {
+        throw new Error("MetaMask error: ${err.message}");
+      });
+
+      // Check if the required account is present
+      const isAvaible = accounts.some(account => account.toLowerCase() === expectedAddress.toLowerCase());
+
+      if (!isAvaible) {
+        throw new Error("ERROR: The selected WebID does not match any of the accounts in MetaMask. Please switch to the correct account.");
+      }
+
+      // Check if the required account is active
+      if (accounts[0].toLowerCase() !== expectedAddress.toLowerCase()) {
+        throw new Error("ERROR: Please select the account " + expectedAddress + " as active in MetaMask.");
+      }
+
+      // Get the signer
+      //const provider = new ethers.BrowserProvider(window.ethereum);
       const provider = new JsonRpcProvider('http://localhost:8545');
       const signer = await provider.getSigner();
+      const signerAddress = await signer.getAddress();
+      
+      // Sign the contract
+      const finalText = await generateConsentText('it');
+      const signature = await signer.signMessage(finalText);
+
+      // Print signature address
+      let address = await ethers.verifyMessage(finalText, signature);
+      console.log("Signature address:", address);
+      
+
+      // Invoke the contract with the selected signer
+      const abi = await loadAbi('<%= baseUrl %>.well-known/abi/pod-authorization.json');
+      const CONTRACT_ADDRESS = '0x5fbdb2315678afecb367f032d93f642f64180aa3';
       const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
 
-      console.log('ABI:', abi);
-      console.log('Contract address:', CONTRACT_ADDRESS);
-      console.log('Signer:', signer);
-      console.log('Client id:', window.client_id);
-
       const contractHash = await sha512(finalText);
-      const validUntil = Math.floor(Date.now() / 1000) + (365 * 24 * 60 * 60); // valido 1 anno
+      const validUntil = Math.floor(Date.now() / 1000) + (365 * 24 * 60 * 60); // 1 year
 
-      await contract.grantAuthorization(contractHash, window.client_id, validUntil);
+      const clientId = window.client_id ?? (typeof client_id !== 'undefined' ? client_id : null);
 
-      if (statusEl) statusEl.textContent = `Firma e invocazione completate per ${signerAddress}`;
+      if (!clientId) throw new Error("ERROR: client_id not defined.");
 
+      const tx = await contract.grantAuthorization(contractHash, clientId, validUntil);
+      const receipt = await tx.wait();
+
+      console.log('Transaction receipt:', receipt);
+
+      // Update UI
+      document.getElementById('signature').value = signature;
+
+      const sigBtn = document.getElementById('signatureButton');
+
+      if (sigBtn) {
+        sigBtn.textContent = 'Firmato';
+        sigBtn.disabled = true;
+      }
+    
     } catch (err) {
-      console.error('Errore:', err);
-      if (statusEl) statusEl.textContent = `Errore: ${err.message}`;
-      alert(`Errore: ${err.message}`);
+      console.error("ERROR: ", err);
+      alert("ERROR: " + err.message);
     }
   }
 
   async function loadAbi(url) {
-    const res = await fetch(url, { cache: 'no-store' }); // evita cache del browser
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) {
-      throw new Error(`Impossibile caricare l'ABI da ${url}`);
+      throw new Error("ERROR: Unable to load the ABI from " + url);
     }
     return await res.json();
   }
