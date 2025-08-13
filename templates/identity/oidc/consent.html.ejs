@@ -109,15 +109,15 @@
 
     <label for="signature-date">Data e ora: <span id="signature-date"></span></label>
 
-    <button type="button" id="signatureButton">Firma con MetaMask</button>
-    <input type="hidden" id="signature" name="signature" required />
-
     <hr/>
 
     <input type="hidden" id="contractHash" name="contractHash" />
     <input type="hidden" id="sha512Audit" name="sha512Audit" />
 
     <p class="actions">
+      <button type="button" id="signatureButton">Firma con MetaMask</button>
+      <input type="hidden" id="signature" name="signature" required />
+
       <button id="authorize" type="submit" disabled autofocus>Autorizza</button>
       <button id="cancel" type="button">Cancella</button>
       <button id="edit-account" type="button" class="alternate">Modifica account</button>
@@ -170,6 +170,10 @@
     });
 
     displayFormattedDateTime('signature-date');
+
+    // Hide authorize button
+    const autBtn = document.getElementById('authorize');
+    autBtn.style.display = 'none';
   })();
 </script>
 
@@ -313,12 +317,29 @@
 </script>
 
 <script>
+
+  function validateCodiceFiscale(cf) {
+    const regex = /^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/i;
+    return regex.test(cf);
+  }
+
+  document.getElementById('cf').addEventListener('blur', function () {
+    const cfValue = this.value.trim().toUpperCase();
+    if (!validateCodiceFiscale(cfValue)) {
+      this.classList.add('invalid');
+    } else {
+      this.classList.remove('invalid');
+    }
+  });
+
   function isSignatureReady() {
     const form = document.getElementById('mainForm');
     const requiredFields = Array.from(form.querySelectorAll('input[required]')).filter(el => el.offsetParent !== null);
 
     for (let field of requiredFields) {
       if (!field.value.trim()) return false;
+
+      if (field.id === 'cf' && !validateCodiceFiscale(field.value)) return false;
     }
 
     const webIdSelected = form.querySelector('input[name="webId"]:checked');
@@ -362,6 +383,12 @@
         throw new Error("ERROR: MetaMask is not installed.");
       }
 
+      // Make metamask swith to local hardhat network
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x7A69' }] // Hardhat
+      });
+
       // Retrieve Ethereum address from selected webID
       const selectedWebId = document.querySelector('input[name="webId"]:checked')?.value;
 
@@ -389,20 +416,22 @@
       }
 
       // Get the signer
-      //const provider = new ethers.BrowserProvider(window.ethereum);
-      const provider = new JsonRpcProvider('http://localhost:8545');
+      //const provider = new ethers.BrowserProvider(window.ethereum); /* To be used when the contract is on the Ethereum network */
+      const provider = new JsonRpcProvider('http://localhost:8545');  /* To be used when the contract is on the local hardhat network */
       const signer = await provider.getSigner();
-      const signerAddress = await signer.getAddress();
+      //const signerAddress = await signer.getAddress();
       
       // Sign the contract
       const finalText = await generateConsentText('it');
-      const signature = await signer.signMessage(finalText);
+      //const signature = await signer.signMessage(finalText);
 
       // Print signature address
-      let address = await ethers.verifyMessage(finalText, signature);
-      console.log("Signature address:", address);
-      
+      //let address = await ethers.verifyMessage(finalText, signature);
 
+      //console.log("Expected address:", expectedAddress);
+      //console.log("Signer address:", signerAddress);
+      //console.log("Signature address:", address);
+      
       // Invoke the contract with the selected signer
       const abi = await loadAbi('<%= baseUrl %>.well-known/abi/pod-authorization.json');
       const CONTRACT_ADDRESS = '0x5fbdb2315678afecb367f032d93f642f64180aa3';
@@ -428,6 +457,10 @@
       if (sigBtn) {
         sigBtn.textContent = 'Firmato';
         sigBtn.disabled = true;
+
+        // Simulate clicking on the authorisation button
+        const autBtn = document.getElementById('authorize');
+        autBtn.click();
       }
     
     } catch (err) {
