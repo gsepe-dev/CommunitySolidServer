@@ -12,6 +12,11 @@
   <a id="createPod" href="" class="link">Create pod</a>
   <ul id="podEntries"></ul>
 </div>
+<div id="ethAddresses">
+  <h2>Ethereum addresses</h2>
+  <p>The Ethereum addresses linked to your pods.</p>
+  <ul id="ethAddressEntries"></ul>
+</div>
 <div id="webIds">
   <h2>Registered Web IDs</h2>
   <p>
@@ -33,7 +38,7 @@
 </p>
 
 <script>
-  const elements = getElements('passwordLoginEntries', 'podEntries', 'webIdEntries', 'clientCredentialsEntries', 'oidc', 'logout');
+  const elements = getElements('passwordLoginEntries', 'podEntries', 'webIdEntries', 'clientCredentialsEntries', 'oidc', 'logout', 'ethAddressEntries');
 
   // Retrieve and display client information
   (async() => {
@@ -67,6 +72,35 @@
       showAccountInfo(elements.podEntries, pods, true, false);
     }
 
+    // Update Ethereum Address entries
+    const podLinks = document.querySelectorAll('#podEntries a');
+    const ethAddresses = {};
+
+    for (const link of podLinks) {
+      const podUrl = link.getAttribute('href');
+      if (!podUrl.includes('/.account/')) {
+        try {
+          const cardUrl = podUrl.replace(/\/$/, '') + '/profile/card';
+          const cardText = await (await fetch(cardUrl)).text();
+
+          const match = cardText.match(/eth:ethAddress\s+"([^"]+)"/);
+          if (match) {
+            const addr = match[1];
+            ethAddresses[addr] = `/eth-services.html?address=${addr}`;
+          }
+        } catch (e) {
+          console.error("ERROR: Unable to retrieve Ethereum address", podUrl, e);
+        }
+      }
+    }
+
+    if (Object.keys(ethAddresses).length === 0) {
+      setVisibility('ethAddresses', false);
+    } else {
+      showAccountInfo(elements.ethAddressEntries, ethAddresses, false, false);
+    }
+
+
     // Update WebID entries
     const { webIdLinks } = controls.account.webId ? await fetchJson(controls.account.webId) : {};
     if (!controls.html.account.linkWebId && Object.keys(webIdLinks ?? {}).length === 0) {
@@ -97,8 +131,10 @@
     for (const [ key, url ] of Object.entries(data)) {
       const li = document.createElement('li');
 
-      // I didn't want to add another parameter to the function to indicate if the key should be a link
-      if (/^https?:\/\//.test(key)) {
+      // If it is an Ethereum address, display it as a link
+      if (/^0x[a-fA-F0-9]{40}$/.test(key)) {
+        li.insertAdjacentHTML('beforeend', `<a href="${url}">${key}</a>`);
+      } else if (/^https?:\/\//.test(key)) {
         li.insertAdjacentHTML('beforeend', `<a href="${key}">${key}</a>`);
       } else {
         li.append(key);
