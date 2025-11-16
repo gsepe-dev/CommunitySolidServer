@@ -444,7 +444,11 @@
 
       if (!clientId) throw new Error("ERROR: client_id not defined.");
 
-      const tx = await contract.grantAuthorization(contractHash, clientId, validUntil);
+      const client_name = document.querySelector('.client-name')?.textContent.trim() || '';
+
+      if (!client_name) throw new Error("ERROR: client_name not defined.");
+
+      const tx = await contract.grantAuthorization(contractHash, clientId, client_name, validUntil);
       const receipt = await tx.wait();
 
       console.log('Transaction receipt:', receipt);
