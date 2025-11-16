@@ -56,6 +56,11 @@
         "type": "string"
       },
       {
+        "internalType": "string",
+        "name": "appName",
+        "type": "string"
+      },
+      {
         "internalType": "uint256",
         "name": "validUntil",
         "type": "uint256"
@@ -87,6 +92,11 @@
       {
         "internalType": "string",
         "name": "appId",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "appName",
         "type": "string"
       },
       {
@@ -129,6 +139,16 @@
             "internalType": "uint256",
             "name": "timestamp",
             "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "appId",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "appName",
+            "type": "string"
           }
         ],
         "internalType": "struct PodAuthorization.AuthEvent[]",
@@ -149,6 +169,11 @@
       {
         "internalType": "string",
         "name": "_appId",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_appName",
         "type": "string"
       },
       {
