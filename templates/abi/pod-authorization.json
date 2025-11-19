@@ -39,45 +39,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "name": "authorizations",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "appId",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "appName",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "validUntil",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "granted",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "_user",
         "type": "address"
       },
