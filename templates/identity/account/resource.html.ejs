@@ -215,7 +215,7 @@
     for (const [ key, url ] of Object.entries(data)) {
       const li = document.createElement('li');
 
-      // If it is an Ethereum address, display it as a link
+      // If it is an Ethereum address, display it as a modal link
       if (/^0x[a-fA-F0-9]{40}$/.test(key)) {
         const span = document.createElement('span');
         span.textContent = key;
@@ -243,21 +243,33 @@
     }
   }
 
-  const provider = new ethers.JsonRpcProvider("http://localhost:8545"); // Hardhat locale
   const abi = await loadAbi("<%= baseUrl %>.well-known/abi/pod-authorization.json");
   const CONTRACT_ADDRESS = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
 
-  // Funzione per recuperare autorizzazioni e popolare il modal
+  let currentUserAddress = null;
+
+  // Function to retrieve authorisations and populate the modal (read-only)
   async function fetchAuthorizations(userAddress) {
+    currentUserAddress = userAddress.toLowerCase();
+
     try {
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, provider);
-      const history = await contract.getUserHistory(userAddress);
+      // Reading with local provider Hardhat (suitable for viewing)
+      const provider = new ethers.JsonRpcProvider("http://localhost:8545");
+      const contractRead = new ethers.Contract(CONTRACT_ADDRESS, abi, provider);
+      const history = await contractRead.getUserHistory(userAddress);
 
       const tbody = document.querySelector("#authTable tbody");
       tbody.innerHTML = "";
 
+      if (!history || history.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="5">Nessuna autorizzazione trovata</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+
       for (const event of history) {
-        const details = await contract.getAuthorizationDetails(userAddress, event.contractHash);
+        const details = await contractRead.getAuthorizationDetails(userAddress, event.contractHash);
         const [appId, appName, validUntilRaw, granted] = details;
         const validUntil = Number(validUntilRaw);
 
@@ -268,7 +280,7 @@
             <td>${appId}</td>
             <td>${new Date(validUntil * 1000).toLocaleString()}</td>
             <td>${event.contractHash}</td>
-            <td><button class="revokeBtn" data-hash="${event.contractHash}" data-user="${userAddress}">Revoca</button></td>
+            <td><button class="revokeBtn" data-hash="${event.contractHash}">Revoca</button></td>
           `;
           tbody.appendChild(tr);
         }
@@ -279,54 +291,60 @@
     }
   }
 
-  // Listener delegato per revoca
+  // Delegated listener for revocation (sign with MetaMask)
   document.querySelector("#authTable tbody").addEventListener("click", async (e) => {
-    if (e.target.classList.contains("revokeBtn")) {
-      const hash = e.target.dataset.hash;
-      const userAddress = e.target.dataset.user;
+    if (!e.target.classList.contains("revokeBtn")) return;
+    const hash = e.target.dataset.hash;
 
-      try {
-        // Trova l’indice dell’account corrispondente
-        const accounts = await provider.listAccounts();
-        const index = accounts.findIndex(acc => acc.address.toLowerCase() === userAddress.toLowerCase());
-        if (index === -1) throw new Error("Account non trovato in Hardhat");
+    try {
+      if (!window.ethereum) throw new Error("MetaMask non disponibile.");
 
-        // Ricrea signer e contratto con l’account corretto
-        const signer = await provider.getSigner(index);
-        const contractWithSigner = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
+      // Ensure you are on the Hardhat network (chainId 0x7A69)
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x7A69" }]
+      });
 
-        // Revoca con l’account giusto
-        const tx = await contractWithSigner.revokeAuthorization(hash);
-        await tx.wait();
+      const mmProvider = new ethers.BrowserProvider(window.ethereum);
+      const mmSigner = await mmProvider.getSigner();
+      const mmAddress = (await mmSigner.getAddress()).toLowerCase();
 
-        alert("Autorizzazione revocata!");
-        fetchAuthorizations(userAddress); // refresh tabella
-      } catch (err) {
-        console.error("Errore revoca:", err);
-        alert("Errore nella revoca");
+      // I check that the active account is the same one clicked for the modal.
+      if (mmAddress !== currentUserAddress) {
+        alert("Seleziona in MetaMask l'account " + currentUserAddress + " per poter revocare.");
+        return;
       }
+
+      // Contract with MetaMask signer
+      const contractWrite = new ethers.Contract(CONTRACT_ADDRESS, abi, mmSigner);
+
+      const tx = await contractWrite.revokeAuthorization(hash);
+      await tx.wait();
+
+      alert("Autorizzazione revocata!");
+      fetchAuthorizations(currentUserAddress);
+    } catch (err) {
+      console.error("Errore revoca:", err);
+      alert("Errore nella revoca: " + (err?.message || "sconosciuto"));
     }
   });
 
-  // Funzione per caricare ABI
+  // Function for loading ABI
   async function loadAbi(url) {
     const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) {
-      throw new Error("ERROR: Unable to load the ABI from " + url);
-    }
+    if (!res.ok) throw new Error("ERROR: Unable to load the ABI from " + url);
     return await res.json();
   }
 
-  // Delegation: intercetta click sugli indirizzi Ethereum
+  // Intercept clicks on Ethereum addresses
   document.getElementById("ethAddressEntries").addEventListener("click", async (e) => {
-    if (e.target.classList.contains("eth-link")) {
-      const address = e.target.textContent.trim();
-      await fetchAuthorizations(address);
-      document.getElementById("authModal").style.display = "block";
-    }
+    if (!e.target.classList.contains("eth-link")) return;
+    const address = e.target.textContent.trim();
+    await fetchAuthorizations(address);
+    document.getElementById("authModal").style.display = "block";
   });
 
-  // Chiudi modal
+  // Close modal
   document.getElementById("closeModal").addEventListener("click", () => {
     document.getElementById("authModal").style.display = "none";
   });
