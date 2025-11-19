@@ -372,119 +372,80 @@
 </script>
 
 <script type="module">
-
-  import { ethers, JsonRpcProvider } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.js";
+  import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.js";
 
   async function signConsentWithMetaMask() {
-    const statusEl = document.getElementById('walletStatus');
-
     try {
       if (!window.ethereum) {
         throw new Error("ERROR: MetaMask is not installed.");
       }
 
-      // Make metamask swith to local hardhat network
+      // Switch network to local Hardhat
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x7A69' }] // Hardhat
+        params: [{ chainId: '0x7A69' }]
       });
 
-      // Retrieve Ethereum address from selected webID
+      // Retrieve selected WebID
       const selectedWebId = document.querySelector('input[name="webId"]:checked')?.value;
-
       if (!selectedWebId) throw new Error("ERROR: Select a WebID.");
 
       const expectedAddress = await getEthAddressFromWebId(selectedWebId);
-
       if (!expectedAddress) throw new Error("ERROR: Ethereum address not found for the selected WebID.");
 
-      // Request accounts from MetaMask
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }).catch( err => {
-        throw new Error("MetaMask error: ${err.message}");
-      });
-
-      // Check if the required account is present
-      const isAvaible = accounts.some(account => account.toLowerCase() === expectedAddress.toLowerCase());
-
-      if (!isAvaible) {
-        throw new Error("ERROR: The selected WebID does not match any of the accounts in MetaMask. Please switch to the correct account.");
-      }
-
-      // Check if the required account is active
-      if (accounts[0].toLowerCase() !== expectedAddress.toLowerCase()) {
-        throw new Error("ERROR: Please select the account " + expectedAddress + " as active in MetaMask.");
-      }
-
-      // Get the signer
-      //const provider = new ethers.BrowserProvider(window.ethereum); /* To be used when the contract is on the Ethereum network */
-      const provider = new JsonRpcProvider('http://localhost:8545');  /* To be used when the contract is on the local hardhat network */
+      // Initialise MetaMask provider
+      const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      //const signerAddress = await signer.getAddress();
-      
-      // Sign the contract
-      const finalText = await generateConsentText('it');
-      //const signature = await signer.signMessage(finalText);
+      const signerAddress = await signer.getAddress();
 
-      // Print signature address
-      //let address = await ethers.verifyMessage(finalText, signature);
+      // Verify that the active account in MetaMask is the WebID account
+      if (signerAddress.toLowerCase() !== expectedAddress.toLowerCase()) {
+        throw new Error("Seleziona in MetaMask l'account " + expectedAddress);
+      }
 
-      //console.log("Expected address:", expectedAddress);
-      //console.log("Signer address:", signerAddress);
-      //console.log("Signature address:", address);
-      
-      // Invoke the contract with the selected signer
+      // Upload ABI and contract
       const abi = await loadAbi('<%= baseUrl %>.well-known/abi/pod-authorization.json');
       const CONTRACT_ADDRESS = '0x5fbdb2315678afecb367f032d93f642f64180aa3';
       const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
 
+      // Prepare authorisation data
+      const finalText = await generateConsentText('it');
       const contractHash = await sha512(finalText);
-      const validUntil = Math.floor(Date.now() / 1000) + (365 * 24 * 60 * 60); // 1 year
+      const validUntil = Math.floor(Date.now() / 1000) + (365 * 24 * 60 * 60);
 
       const clientId = window.client_id ?? (typeof client_id !== 'undefined' ? client_id : null);
-
       if (!clientId) throw new Error("ERROR: client_id not defined.");
 
       const client_name = document.querySelector('.client-name')?.textContent.trim() || '';
-
       if (!client_name) throw new Error("ERROR: client_name not defined.");
 
+      // Send transaction with the active account in MetaMask
       const tx = await contract.grantAuthorization(contractHash, clientId, client_name, validUntil);
       const receipt = await tx.wait();
-
       console.log('Transaction receipt:', receipt);
 
       // Update UI
-      document.getElementById('signature').value = signature;
-
       const sigBtn = document.getElementById('signatureButton');
-
       if (sigBtn) {
         sigBtn.textContent = 'Firmato';
         sigBtn.disabled = true;
-
-        // Simulate clicking on the authorisation button
-        const autBtn = document.getElementById('authorize');
-        autBtn.click();
+        document.getElementById('authorize').click();
       }
-    
+
     } catch (err) {
-      console.error("ERROR: ", err);
+      console.error("ERROR:", err);
       alert("ERROR: " + err.message);
     }
   }
 
   async function loadAbi(url) {
     const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) {
-      throw new Error("ERROR: Unable to load the ABI from " + url);
-    }
+    if (!res.ok) throw new Error("ERROR: Unable to load the ABI from " + url);
     return await res.json();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('signatureButton');
-    if (btn) {
-      btn.addEventListener('click', signConsentWithMetaMask);
-    }
+    if (btn) btn.addEventListener('click', signConsentWithMetaMask);
   });
 </script>
