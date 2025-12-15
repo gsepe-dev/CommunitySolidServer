@@ -1,111 +1,77 @@
-# Community Solid Server
+# CommunitySolidServer
 
-<img src="https://raw.githubusercontent.com/CommunitySolidServer/CommunitySolidServer/main/templates/images/solid.svg"
- alt="[Solid logo]" height="150" align="right"/>
+This project proposes a modified version of CommunitySolidServer, developed with the aim of integrating interoperability features through the adoption of a Ricardian contract designed to manage consent relating to healthcare data.
 
-[![MIT license](https://img.shields.io/npm/l/@solid/community-server)](https://github.com/CommunitySolidServer/CommunitySolidServer/blob/main/LICENSE.md)
-[![npm version](https://img.shields.io/npm/v/@solid/community-server)](https://www.npmjs.com/package/@solid/community-server)
-[![Node.js version](https://img.shields.io/node/v/@solid/community-server)](https://www.npmjs.com/package/@solid/community-server)
-[![Build Status](https://github.com/CommunitySolidServer/CommunitySolidServer/workflows/CI/badge.svg)](https://github.com/CommunitySolidServer/CommunitySolidServer/actions)
-[![Coverage Status](https://coveralls.io/repos/github/CommunitySolidServer/CommunitySolidServer/badge.svg)](https://coveralls.io/github/CommunitySolidServer/CommunitySolidServer)
-[![DOI](https://zenodo.org/badge/265197208.svg)](https://zenodo.org/badge/latestdoi/265197208)
-[![GitHub discussions](https://img.shields.io/github/discussions/CommunitySolidServer/CommunitySolidServer)](https://github.com/CommunitySolidServer/CommunitySolidServer/discussions)
-[![Chat on Gitter](https://badges.gitter.im/CommunitySolidServer/community.svg)](https://gitter.im/CommunitySolidServer/community)
+The blockchain infrastructure used is based on the development network provided by Hardhat, while transactions are executed via the MetaMask extension.
 
-**The Community Solid Server is open software
-that provides you with a [Solid](https://solidproject.org/) Pod and identity.
-This Pod acts as your own personal storage space
-so you can share data with people and Solid applications.**
+### Key features
 
-As an open and modular implementation of the
-[Solid specifications](https://solidproject.org/TR/),
-the Community Solid Server is a great companion:
+The implemented solution allows you to:
 
-- 🧑🏽 **for people** who want to try out having their own Pod
+1) Create a new pod by associating it with an Ethereum address;
 
-- 👨🏿‍💻 **for developers** who want to quickly create and test Solid apps
+2) View requests for access to pod data, presented in the form of an informed consent contract that the user is required to sign;
 
-- 👩🏻‍🔬 **for researchers** who want to design new features for Solid
+3) Revoke previously granted authorisations through a dedicated modal window available on the server homepage.
 
-And, of course, for many others who like to experience Solid.
+## Getting Started
 
-## ⚡ Running the Community Solid Server
-
-Make sure you have [Node.js](https://nodejs.org/en/) 18.0 or higher.
-If this is your first time using Node.js,
-you can find instructions on how to do this [here](https://nodejs.org/en/download/package-manager).
+### Clone the repo
 
 ```shell
-npx @solid/community-server
+git clone https://github.com/gsepe-dev/CommunitySolidServer.git
 ```
 
-Now visit your brand new server at [http://localhost:3000/](http://localhost:3000/)!
-
-To persist your pod's contents between restarts, use:
+### Move to the correct folder
 
 ```shell
-npx @solid/community-server -c @css:config/file.json -f data/
+cd CommunitySolidServer/
 ```
 
-In case you prefer to use Docker instead,
-you can find instructions for this and other methods in the
-[documentation](https://communitysolidserver.github.io/CommunitySolidServer/latest/usage/starting-server/).
+### Change branch
 
-## 🔧 Configure your server
-
-Substantial changes to server behavior can be achieved via JSON configuration files.
-The Community Solid Server uses [Components.js](https://componentsjs.readthedocs.io/en/latest/)
-to specify how modules and components need to be wired together at runtime.
-
-Recipes for configuring the server can be found at [CommunitySolidServer/recipes](https://github.com/CommunitySolidServer/recipes).
-
-Examples and guidance on custom configurations
-are available in the [`config` folder](https://github.com/CommunitySolidServer/CommunitySolidServer/tree/main/config),
-and the [configurations tutorial](https://github.com/CommunitySolidServer/tutorials/blob/main/custom-configurations.md).
-There is also a [configuration generator](https://communitysolidserver.github.io/configuration-generator/).
-
-## 👩🏽‍💻 Developing server code
-
-The server allows writing and plugging in custom modules
-without altering its base source code.
-
-The [📗 API documentation](https://communitysolidserver.github.io/CommunitySolidServer/5.x/docs) and
-the [📓 user documentation](https://communitysolidserver.github.io/CommunitySolidServer/)
-can help you find your way.
-There is also a repository of [📚 comprehensive tutorials](https://github.com/CommunitySolidServer/tutorials/)
-
-## 📑 Cite
-
-If the Community Solid Server played a role in your scientific publication,
-we would appreciate a citation of our
-[article](https://journals.sagepub.com/doi/abs/10.3233/SW-243726).
-
-```bibtex
-@article{CommunitySolidServer,
-  title   = {The Community Solid Server: Supporting research \& development in an evolving ecosystem},
-  author  = {Van Herwegen, Joachim and Verborgh, Ruben},
-  journal = {Semantic Web},
-  volume  = {15},
-  number  = {6},
-  pages   = {2597--2611},
-  year    = {2024},
-  doi     = {10.3233/SW-243726},
-  url     = {https://journals.sagepub.com/doi/abs/10.3233/SW-243726}
-}
+```shell
+git checkout riccy
 ```
 
-## 📜 License
+### Install dependencies
 
-The Community Solid Server code
-is copyrighted by [Inrupt Inc.](https://inrupt.com/)
-and [imec](https://www.imec-int.com/)
-and available under the [MIT License](https://github.com/CommunitySolidServer/CommunitySolidServer/blob/main/LICENSE.md).
+```shell
+npm install
+```
 
-## 🎤 Feedback and questions
+## Deploy
 
-Don't hesitate to [start a discussion](https://github.com/CommunitySolidServer/CommunitySolidServer/discussions)
-or [report a bug](https://github.com/CommunitySolidServer/CommunitySolidServer/issues).
+### Preliminary instructions
 
-There's also [a Matrix-based, CSS-focused chat](https://matrix.to/#/#CommunitySolidServer_community:gitter.im)
+Before proceeding, ensure that you have deployed the ricardian contract [PodAuthorization](https://github.com/gsepe-dev/css-smartcontracts-thesis)
 
-Learn more about Solid at [solidproject.org](https://solidproject.org/).
+### Start the server
+
+1) Version without data persistence
+
+To run the server without data persistence, use the following command:
+
+```shell
+npm start -- -c @css:config/file.json
+```
+
+2) Version with data persistence
+
+To start the server with data persistence, you must first create a folder on the server that will serve as the archive (the folder name can be customised).
+
+With the following command, the name **data** is used:
+
+```shell
+npm start -- -c @css:config/file.json -f data/
+```
+
+## Built With
+
+* [CommunitySolidServer](https://github.com/CommunitySolidServer/CommunitySolidServer) - Open and modular implementation of the Solid specifications;
+
+* [npm](https://www.npmjs.com/) - Tool for installing and managing JavaScript modules and packages for Node.js applications.
+
+## License
+
+This project is licensed under the MIT License
